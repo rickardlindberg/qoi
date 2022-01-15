@@ -1,0 +1,57 @@
+CodeGenerator {
+  Grammar       = .:x ast*:ys -> ["Grammar" x ~~ys]
+  Rule          = .:x ast:y   -> [["Rule" x]
+                                  ~y
+                                  ["OpCode" "RETURN"]]
+  Or            =
+    | ast:x Or:y              -> label():a -> label():b
+                              -> [["OpCode" "BACKTRACK"]
+                                  ["Target" a]
+                                  ~x
+                                  ["OpCode" "COMMIT"]
+                                  ["Target" b]
+                                  ["Label" a]
+                                  ~y
+                                  ["Label" b]]
+    | ast
+  Scope         = ast:x       -> [["OpCode" "PUSH_SCOPE"]
+                                  ~x
+                                  ["OpCode" "POP_SCOPE"]]
+  And           = ast*:xs     -> [~~xs]
+  Bind          = .:x ast:y   -> [~y
+                                  ["OpCode" "BIND"]
+                                  ["Value" x]]
+  Star          = ast:x       -> label():a -> label():b
+                              -> [["OpCode" "LIST_START"]
+                                  ["Label" a]
+                                  ["OpCode" "BACKTRACK"]
+                                  ["Target" b]
+                                  ~x
+                                  ["OpCode" "LIST_APPEND"]
+                                  ["OpCode" "COMMIT"]
+                                  ["Target" a]
+                                  ["Label" b]
+                                  ["OpCode" "LIST_END"]]
+  Not           = ast:x       -> label():a -> label():b
+                              -> [["OpCode" "BACKTRACK"]
+                                  ["Target" b]
+                                  ~x
+                                  ["OpCode" "COMMIT"]
+                                  ["Target" a]
+                                  ["Label" a]
+                                  ["OpCode" "FAIL"]
+                                  ["Value" "no match"]
+                                  ["Label" b]]
+  MatchCallRule =             -> [["OpCode" "MATCH_CALL_RULE"]]
+  MatchRule     = .:x         -> [["OpCode" "CALL"]
+                                  ["Target" x]]
+  MatchObject   = .:x         -> [["OpCode" "MATCH"]
+                                  x]
+  MatchList     = ast:x       -> [["OpCode" "PUSH_STREAM"]
+                                  ~x
+                                  ["OpCode" "POP_STREAM"]]
+  Action        = .:x         -> [["OpCode" "ACTION"]
+                                  ["Action" x]]
+  asts          = ast*:xs !.  -> xs
+  ast           = [%:x]       -> x
+}

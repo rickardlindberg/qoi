@@ -1,0 +1,39 @@
+Assembler {
+  Grammar  = .:x ast*:ys     -> list():rules
+                             -> list():code
+                             -> dict():labels
+                             -> list():patches
+                             -> ys
+                             -> run("asts" patches)
+                             -> { "class " x "(Grammar):\n" >
+                                    "rules = {\n" > join(rules ",\n") < "\n}\n"
+                                    "code = [\n" > join(code  ",\n") < "\n]\n"
+                                  < }
+  Rule     = .:x             -> add(rules { repr(x) ": " len(code) })
+                             -> set(labels x len(code))
+  Label    = .:x             -> set(labels x len(code))
+  Target   = .:x             -> add(patches ["Patch" len(code) x])
+                             -> add(code "placeholder")
+  Patch    = .:x .:y         -> set(code x get(labels y))
+  OpCode   = .:x             -> add(code x)
+  Value    = .:x             -> add(code repr(x))
+  Eq       = .:x             -> add(code repr(x))
+                             -> add(code { "lambda x: x == " repr(x) })
+  Range    = .:x .:y         -> add(code repr({"range " repr(x) "-" repr(y)}))
+                             -> add(code { "lambda x: " repr(x) " <= x <= " repr(y) })
+  Any      =                 -> add(code repr("any"))
+                             -> add(code "lambda x: True")
+  Action   = ast:x           -> add(code {"lambda self: " x})
+  Set      = .:x ast:y ast:z -> { "self.bind(" repr(x) ", " y ", lambda: " z ")" }
+  String   = .:x             -> repr(x)
+  List     = astList:x       -> { "concat([" x "])" }
+  ListItem = .:x ast:y       -> { "splice(" repr(x) ", " y ")" }
+  Format   = astList:x       -> { "join([" x "])" }
+  Indent   = ast:x           -> { "indent(" x ", "
+                                  "self.lookup('indentprefix'))" }
+  Call     = ast:x astList:y -> { x "(" y ")" }
+  Lookup   = .:x             -> { "self.lookup(" repr(x) ")" }
+  asts     = ast*:xs !.      -> { xs }
+  astList  = ast*:xs         -> join(xs ", ")
+  ast      = [%:x]           -> x
+}
