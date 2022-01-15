@@ -26,6 +26,7 @@ Assembler {
   Action   = ast:x           -> add(code {"lambda self: " x})
   Set      = .:x ast:y ast:z -> { "self.bind(" repr(x) ", " y ", lambda: " z ")" }
   String   = .:x             -> repr(x)
+  Integer  = .:x             -> repr(x)
   List     = astList:x       -> { "concat([" x "])" }
   ListItem = .:x ast:y       -> { "splice(" repr(x) ", " y ")" }
   Format   = astList:x       -> { "join([" x "])" }

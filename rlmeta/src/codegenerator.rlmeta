@@ -47,6 +47,8 @@ CodeGenerator {
                                   ["Target" x]]
   MatchObject   = .:x         -> [["OpCode" "MATCH"]
                                   x]
+  MatchBinary   = .:x         -> [["OpCode" "MATCH_BINARY"]
+                                  ["Value" x]]
   MatchList     = ast:x       -> [["OpCode" "PUSH_STREAM"]
                                   ~x
                                   ["OpCode" "POP_STREAM"]]

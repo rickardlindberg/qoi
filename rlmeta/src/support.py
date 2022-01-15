@@ -64,6 +64,15 @@ def MATCH(vm):
     fn = vm.pop_arg()
     MATCH_(vm, fn, ("expected {}", object_description))
 
+def MATCH_BINARY(vm):
+    pattern = vm.pop_arg()
+    if MATCH_(vm, lambda x: x & pattern["mask"] == pattern["value"], ("expected binary",)):
+        byte = vm.stream[vm.pos-1]
+        for key, value in pattern["variables"].items():
+            vm.scope[key] = SemanticAction(
+                (byte & value["mask"]) >> value["shift"]
+            )
+
 def MATCH_(vm, fn, message):
     if vm.pos >= len(vm.stream) or not fn(vm.stream[vm.pos]):
         FAIL_(vm, message)
@@ -173,6 +182,13 @@ class Grammar(object):
             "get": lambda x, y: x[y],
             "set": lambda x, y, z: x.__setitem__(y, z),
             "len": len,
+            "int": int,
+            "mmod": lambda x, y: x % y,
+            "mmul": lambda x, y: x * y,
+            "msub": lambda x, y: x - y,
+            "compilebin": compilebin,
+            "msum": lambda *args: sum(args),
+            "mlshift": lambda x, y: x << y,
             "repr": repr,
             "join": join,
         })).run(rule, stream)
@@ -235,3 +251,26 @@ def compile_chain(grammars, source):
                 indent(stream_string)
             ))
     return source
+
+def compilebin(pattern):
+    result = {
+        "mask": 0,
+        "value": 0,
+        "variables": {},
+    }
+    last_char = None
+    for index, char in enumerate(reversed(pattern)):
+        if char in "01":
+            result["mask"] |= (1 << index)
+            if char == "1":
+                result["value"] |= (1 << index)
+        else:
+            if char != last_char:
+                result["variables"][char] = {
+                    "mask": 1 << index,
+                    "shift": index,
+                }
+                last_char = char
+            else:
+                result["variables"][char]["mask"] |= (1 << index)
+    return result

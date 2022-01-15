@@ -24,6 +24,8 @@ Parser {
     | space char:x '-' char:y                 -> ["MatchObject" ["Range" x y]]
     | space '\'' (!'\'' matchChar)*:xs '\''   -> ["And" ~xs]
     | space '.'                               -> ["MatchObject" ["Any"]]
+    | space '0x' hex:x hex*:xs                -> ["MatchObject" ["Eq" int({x xs} 16)]]
+    | space '0b' bin:x bin*:xs                -> ["MatchBinary" compilebin([x ~xs])]
     | space '(' choice:x space ')'            -> x
     | space '[' expr*:xs space ']'            -> ["MatchList" ["And" ~xs]]
   matchChar =
@@ -37,6 +39,7 @@ Parser {
     | space '->' hostExpr:x                   -> x
   hostExpr =
     | space string:x                          -> ["String" x]
+    | space digit:x digit*:xs                 -> ["Integer" int({x xs})]
     | space '[' hostListItem*:xs space ']'    -> ["List" ~xs]
     | space '{' formatExpr*:xs space '}'      -> ["Format" ~xs]
     | var:x space '(' hostExpr*:ys space ')'  -> ["Call" x ~ys]
@@ -56,5 +59,8 @@ Parser {
   name      = space nameStart:x nameChar*:xs  -> { x xs }
   nameStart = 'a'-'z' | 'A'-'Z'
   nameChar  = 'a'-'z' | 'A'-'Z' | '0'-'9'
+  digit     = '0'-'9'
+  hex       = '0'-'9' | 'A'-'F'
+  bin       = '0' | '1' | 'a'-'z'
   space     = (' ' | '\n')*
 }

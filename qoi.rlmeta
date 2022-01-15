@@ -1,0 +1,55 @@
+QOI {
+    decode = start
+             int:width
+             int:height
+             channels:channels
+             colorspace:colorspace
+             chunk*:chunks
+             end
+             !.
+        -> mmul([[0 0 0 255]] 65):running
+        -> chunks:x
+        -> [width height channels colorspace [~~x]]
+    start = 0x71 0x6F 0x69 0x66
+    end = 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01
+    channels = 0x3 | 0x4
+    colorspace = 0x0 | 0x1
+    chunk =
+        | 0b11111111 .:r .:g .:b .:a
+            -> [run("ProcessPixel" [r g b a])]
+        | 0b11111110 .:r .:g .:b
+            -> [run("ProcessPixel" [r g b 255])]
+        | !end 0b00xxxxxx
+            -> [run("ProcessPixel" get(running x))]
+        | 0b01rrggbb
+            -> [run("ProcessPixelDiff" [r g b ~get(running 64)])]
+        | 0b10xxxxxx 0byyyyzzzz
+            -> [run("ProcessLumaDiff" [x y z ~get(running 64)])]
+        | 0b11xxxxxx
+            -> mmul([get(running 64)] msum(x 1))
+    ProcessPixelDiff = .:rd .:gd .:bd .:r .:g .:b .:a
+        -> run("ProcessPixel" [mmod(msum(r msub(rd 2)) 256)
+                               mmod(msum(g msub(gd 2)) 256)
+                               mmod(msum(b msub(bd 2)) 256)
+                               a])
+    ProcessLumaDiff = .:dg .:drdg .:dbdg .:r .:g .:b .:a
+        -> run("ProcessPixel" [mmod(msum(r msub(dg 40) drdg) 256)
+                               mmod(msum(g msub(dg 32))      256)
+                               mmod(msum(b msub(dg 40) dbdg) 256)
+                               a])
+    ProcessPixel = .:r .:g .:b .:a
+        -> set(running 64 [r g b a])
+        -> set(running
+               mmod(msum(mmul(r 3)
+                         mmul(g 5)
+                         mmul(b 7)
+                         mmul(a 11))
+                    64)
+               [r g b a])
+        -> [r g b a]
+    int = .:b1 .:b2 .:b3 .:b4
+        -> msum(mlshift(b1 24)
+                mlshift(b2 16)
+                mlshift(b3 8)
+                b4)
+}
