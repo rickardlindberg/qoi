@@ -4,7 +4,7 @@ CodeGenerator {
                                   ~y
                                   ["OpCode" "RETURN"]]
   Or            =
-    | ast:x Or:y              -> label():a -> label():b
+    | ast:x Or:y              -> (label):a -> (label):b
                               -> [["OpCode" "BACKTRACK"]
                                   ["Target" a]
                                   ~x
@@ -21,7 +21,7 @@ CodeGenerator {
   Bind          = .:x ast:y   -> [~y
                                   ["OpCode" "BIND"]
                                   ["Value" x]]
-  Star          = ast:x       -> label():a -> label():b
+  Star          = ast:x       -> (label):a -> (label):b
                               -> [["OpCode" "LIST_START"]
                                   ["Label" a]
                                   ["OpCode" "BACKTRACK"]
@@ -32,7 +32,7 @@ CodeGenerator {
                                   ["Target" a]
                                   ["Label" b]
                                   ["OpCode" "LIST_END"]]
-  Not           = ast:x       -> label():a -> label():b
+  Not           = ast:x       -> (label):a -> (label):b
                               -> [["OpCode" "BACKTRACK"]
                                   ["Target" b]
                                   ~x

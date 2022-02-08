@@ -10,4 +10,6 @@ python rlmeta/rlmeta.py \
     --copy main.py \
     > qoi.py
 
-python qoi.py "$1"
+time python qoi.py "$1"
+
+eog monument.png

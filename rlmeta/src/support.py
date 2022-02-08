@@ -183,12 +183,7 @@ class Grammar(object):
             "set": lambda x, y, z: x.__setitem__(y, z),
             "len": len,
             "int": int,
-            "mmod": lambda x, y: x % y,
-            "mmul": lambda x, y: x * y,
-            "msub": lambda x, y: x - y,
             "compilebin": compilebin,
-            "msum": lambda *args: sum(args),
-            "mlshift": lambda x, y: x << y,
             "repr": repr,
             "join": join,
         })).run(rule, stream)
