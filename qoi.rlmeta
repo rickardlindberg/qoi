@@ -8,8 +8,7 @@ QOI {
              end
              !.
         -> (* [[0 0 0 255]] 65):running
-        -> chunks:x
-        -> [width height channels colorspace [~~x]]
+        -> [width height channels colorspace [~~chunks]]
     start = 0x71 0x6F 0x69 0x66
     end = 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01
     channels = 0x3 | 0x4
