@@ -12,4 +12,4 @@ python rlmeta/rlmeta.py \
 
 time python qoi.py "$1"
 
-eog monument.png
+eog "$1.png"
